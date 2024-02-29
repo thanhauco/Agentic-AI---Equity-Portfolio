@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  alpha-agents:
+    build: .
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    command: python examples/single_stock_analysis.py --ticker MSFT
