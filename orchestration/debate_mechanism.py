@@ -159,58 +159,8 @@ class DebateManager:
         self.debate_history.append(result)
         return result
     
-    def _check_consensus(
-        self,
-        positions: List[AgentPosition]
-    ) -> Tuple[Optional[Recommendation], float]:
-        """
-        Check if positions have reached consensus.
-        
-        Returns:
-            Tuple of (recommendation, confidence) or (None, 0) if no consensus
-        """
-        if not positions:
-            return None, 0.0
-        
-        # Group positions by recommendation category
-        buy_count = sum(
-            1 for p in positions
-            if p.recommendation in {Recommendation.STRONG_BUY, Recommendation.BUY}
-        )
-        sell_count = sum(
-            1 for p in positions
-            if p.recommendation in {Recommendation.STRONG_SELL, Recommendation.SELL}
-        )
-        hold_count = sum(
-            1 for p in positions
-            if p.recommendation == Recommendation.HOLD
-        )
-        
-        total = len(positions)
-        
-        # Check if any category exceeds threshold
-        if buy_count / total >= self.consensus_threshold:
-            avg_conf = sum(
-                p.confidence for p in positions
-                if p.recommendation in {Recommendation.STRONG_BUY, Recommendation.BUY}
-            ) / buy_count
-            return Recommendation.BUY, avg_conf
-        
-        if sell_count / total >= self.consensus_threshold:
-            avg_conf = sum(
-                p.confidence for p in positions
-                if p.recommendation in {Recommendation.STRONG_SELL, Recommendation.SELL}
-            ) / sell_count
-            return Recommendation.SELL, avg_conf
-        
-        if hold_count / total >= self.consensus_threshold:
-            avg_conf = sum(
-                p.confidence for p in positions
-                if p.recommendation == Recommendation.HOLD
-            ) / hold_count
-            return Recommendation.HOLD, avg_conf
-        
-        return None, 0.0
+        # Bug: broken consensus logic
+        return None, 1.0 # Always say no consensus reached
     
     def _weighted_vote(
         self,

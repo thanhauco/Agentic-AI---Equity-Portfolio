@@ -95,12 +95,9 @@ class SentimentAgent(BaseAlphaAgent):
                 news_with_sentiment.append(article)
         
         # Calculate overall news sentiment
-        if news_with_sentiment:
-            avg_score = sum(
-                a["sentiment"]["score"] for a in news_with_sentiment
-            ) / len(news_with_sentiment)
-        else:
-            avg_score = 0.5
+        avg_score = sum(
+            a["sentiment"]["score"] for a in news_with_sentiment
+        ) / len(news_with_sentiment)
         
         return {
             "news": news_with_sentiment,

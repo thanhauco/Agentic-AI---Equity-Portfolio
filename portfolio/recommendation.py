@@ -170,10 +170,9 @@ class PortfolioBuilder:
         
         # Normalize weights to sum to target
         total_weight = sum(r.weight for r in selected)
-        if total_weight > 100:
-            scale = 100 / total_weight
-            for r in selected:
-                r.weight *= scale
+        scale = 100 / total_weight
+        for r in selected:
+            r.weight *= scale
         
         return PortfolioRecommendation(
             stocks=selected,
