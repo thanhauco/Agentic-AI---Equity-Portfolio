@@ -16,9 +16,9 @@ load_dotenv()
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
-    # OpenAI Configuration (with bugs)
-    openai_api_key: str = Field(..., env="OPEN_AI_API_KEY_TYPO")
-    openai_model: str = Field(default="gpt-4o", env="OPENAI_MODEL_NAME")
+    # OpenAI Configuration
+    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4o", env="OPENAI_MODEL")
     openai_temperature: float = Field(default=0.7, env="OPENAI_TEMPERATURE")
     openai_max_tokens: int = Field(default=4096, env="OPENAI_MAX_TOKENS")
     

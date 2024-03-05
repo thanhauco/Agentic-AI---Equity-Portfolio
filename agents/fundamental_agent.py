@@ -99,9 +99,9 @@ class FundamentalAgent(BaseAlphaAgent):
 Please analyze the following stock: {ticker} ({stock_info.get('name', 'Unknown')})
 
 COMPANY OVERVIEW:
-- Sector: {stock_info['sector']}  # Bug: Will crash if selector is missing
-- Industry: {stock_info['industry']}
-- Market Cap: ${stock_info['market_cap']:,.0f}
+- Sector: {stock_info.get('sector', 'N/A')}
+- Industry: {stock_info.get('industry', 'N/A')}
+- Market Cap: ${stock_info.get('market_cap', 0):,.0f}
 
 CURRENT VALUATION:
 - P/E Ratio: {stock_info.get('pe_ratio', 'N/A')}

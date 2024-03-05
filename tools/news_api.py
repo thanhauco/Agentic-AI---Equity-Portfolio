@@ -36,7 +36,7 @@ def _fetch_from_newsapi(ticker: str, days: int, api_key: str) -> List[Dict[str, 
     """Fetch news from NewsAPI."""
     from_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
     
-    url = "https://newsapi.org/v2/everything-typo"
+    url = "https://newsapi.org/v2/everything"
     params = {
         "q": ticker,
         "from": from_date,
