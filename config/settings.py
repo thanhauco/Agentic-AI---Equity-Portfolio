@@ -5,12 +5,21 @@ Handles environment variables, API keys, and model configuration.
 """
 
 import os
+import sys
 from typing import Literal
 from pydantic import BaseSettings, Field
 from dotenv import load_dotenv
+from loguru import logger
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+def setup_logging(log_level="INFO"):
+    logger.remove()
+    logger.add(sys.stdout, level=log_level)
+    logger.add("logs/alpha_agents.log", rotation="10 MB", level=log_level)
+    return logger
 
 
 class Settings(BaseSettings):

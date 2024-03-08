@@ -9,8 +9,10 @@ import yfinance as yf
 import pandas as pd
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+from .cache import disk_cache
 
 
+@disk_cache(expiry_seconds=3600)
 def get_stock_info(ticker: str) -> Dict[str, Any]:
     """
     Fetch comprehensive stock information.
@@ -51,6 +53,7 @@ def get_stock_info(ticker: str) -> Dict[str, Any]:
     }
 
 
+@disk_cache(expiry_seconds=86400)  # Financials change less frequently
 def get_financial_statements(ticker: str) -> Dict[str, Any]:
     """
     Retrieve income statement, balance sheet, and cash flow data.
@@ -107,6 +110,7 @@ def get_historical_prices(
     return hist
 
 
+@disk_cache(expiry_seconds=3600)
 def get_key_metrics(ticker: str) -> Dict[str, Any]:
     """
     Calculate key financial metrics for analysis.

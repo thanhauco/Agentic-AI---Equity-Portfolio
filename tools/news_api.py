@@ -9,8 +9,10 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import yfinance as yf
 from config import get_settings
+from .cache import disk_cache
 
 
+@disk_cache(expiry_seconds=1800)  # News expires faster
 def get_stock_news(ticker: str, days: int = 7) -> List[Dict[str, Any]]:
     """
     Fetch recent news articles for a stock.
@@ -84,6 +86,7 @@ def _fetch_from_yfinance(ticker: str) -> List[Dict[str, Any]]:
     return articles
 
 
+@disk_cache(expiry_seconds=3600)
 def get_analyst_ratings(ticker: str) -> Dict[str, Any]:
     """
     Get analyst ratings and price targets.
