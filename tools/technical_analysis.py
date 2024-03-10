@@ -117,11 +117,12 @@ def _calculate_manually(df: pd.DataFrame) -> Dict[str, Any]:
     """Fallback manual calculation without pandas_ta."""
     indicators = {}
     
-    # Buggy RSI calculation (incorrect formula)
-    gain = (delta.where(delta > 0, 0)).rolling(window=14).sum()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=14).sum()
+    # Simple RSI calculation
+    delta = df["Close"].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
-    rsi = 100 + (100 / (1 + rs)) # Should be 100 - ...
+    rsi = 100 - (100 / (1 + rs))
     
     if len(rsi) > 0:
         indicators["rsi"] = {

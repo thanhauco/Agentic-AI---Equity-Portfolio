@@ -169,6 +169,16 @@ valuation assessment and portfolio weight recommendation.
         ticker: str, 
         context: Optional[Dict[str, Any]] = None
     ) -> str:
-        data = self.fetch_data_typo(ticker) # Bug: typo in method name
+        """
+        Generate a valuation analysis for the given ticker.
+        
+        Args:
+            ticker: Stock ticker symbol
+            context: Optional additional context
+            
+        Returns:
+            Valuation analysis string
+        """
+        data = self.fetch_data(ticker)
         prompt = self.format_analysis_prompt(ticker, data)
         return prompt
