@@ -161,9 +161,30 @@ def analyze_sentiment(text: str) -> Dict[str, Any]:
         else:
             classification = "neutral"
     
-    return {
-        "score": score,
-        "classification": classification,
-        "positive_signals": positive_count,
-        "negative_signals": negative_count,
-    }
+def get_sentiment_for_tickers(tickers: List[str]) -> Dict[str, float]:
+    """
+    Get aggregate sentiment for a list of tickers.
+    
+    Args:
+        tickers: List of stock symbols
+        
+    Returns:
+        Dictionary mapping tickers to sentiment score (0 to 1)
+    """
+    results = {}
+    for ticker in tickers:
+        try:
+            news = get_stock_news(ticker, days=3)
+            if not news or "error" in news[0]:
+                results[ticker] = 0.5
+                continue
+                
+            scores = []
+            for art in news[:10]:
+                sent = analyze_sentiment(art.get("title", ""))
+                scores.append(sent["score"])
+            
+            results[ticker] = sum(scores) / len(scores) if scores else 0.5
+        except:
+            results[ticker] = 0.5
+    return results
