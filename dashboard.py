@@ -5,6 +5,8 @@ Interactive AlphaAgents Dashboard (Streamlit)
 import streamlit as st
 import pandas as pd
 import yfinance as yf
+import plotly.graph_objects as go
+import plotly.express as px
 from datetime import datetime, timedelta
 import sys
 import os
@@ -15,6 +17,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from orchestration import AlphaGroupChat
 from portfolio import PortfolioBuilder
 from portfolio.backtest import BacktestEngine
+from tools import get_sentiment_for_tickers
 
 st.set_page_config(page_title="AlphaAgents Terminal", page_icon="🤖", layout="wide")
 
@@ -24,11 +27,11 @@ st.markdown("---")
 # Sidebar
 st.sidebar.header("Configuration")
 risk_profile = st.sidebar.selectbox("Risk Profile", ["neutral", "averse"])
-tickers_input = st.sidebar.text_input("Tickers (comma-separated)", "AAPL,MSFT,NVDA,GOOGL")
+tickers_input = st.sidebar.text_input("Tickers (comma-separated)", "AAPL,MSFT,NVDA,GOOGL,AMZN,TSLA,META")
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 # Main UI
-tab1, tab2, tab3 = st.tabs(["Stock Analysis", "Portfolio View", "Backtesting"])
+tab1, tab2, tab3, tab4 = st.tabs(["Stock Analysis", "Technical Charts", "Portfolio View", "Market Sentiment"])
 
 with tab1:
     st.header("Collaborative Stock Analysis")
@@ -51,6 +54,21 @@ with tab1:
                 st.success(results.get("valuation_analysis", "No data"))
 
 with tab2:
+    st.header("Technical Candlestick Charts")
+    chart_ticker = st.selectbox("Ticker for Charting", tickers, key="chart_ticker")
+    period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"])
+    
+    if st.button("Draw Chart"):
+        df = yf.download(chart_ticker, period=period)
+        fig = go.Figure(data=[go.Candlestick(x=df.index,
+                        open=df['Open'],
+                        high=df['High'],
+                        low=df['Low'],
+                        close=df['Close'])])
+        fig.update_layout(title=f"{chart_ticker} Price Action", xaxis_rangeslider_visible=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+with tab3:
     st.header("Portfolio Construction")
     if st.button("Generate Recommendations"):
         st.write("Synthesizing multi-agent views into optimized weights...")
@@ -60,7 +78,24 @@ with tab2:
         ]
         st.table(recs)
 
-with tab3:
+with tab4:
+    st.header("Global Market Sentiment Heatmap")
+    if st.button("Refresh Sentiment Map"):
+        with st.spinner("Calculating sentiment for universe..."):
+            scores = get_sentiment_for_tickers(tickers)
+            sentiment_df = pd.DataFrame([
+                {"Ticker": k, "Sentiment": (v - 0.5) * 2, "Value": 1} for k, v in scores.items()
+            ])
+            
+            fig = px.treemap(sentiment_df, 
+                             path=['Ticker'], 
+                             values='Value',
+                             color='Sentiment',
+                             color_continuous_scale='RdYlGn',
+                             range_color=[-1, 1],
+                             title="Stock Sentiment Heatmap (Red: Bearish, Green: Bullish)")
+            st.plotly_chart(fig, use_container_width=True)
+
     st.header("Performance Backtesting")
     start_date = st.date_input("Start Date", datetime.now() - timedelta(days=365))
     end_date = st.date_input("End Date", datetime.now())
