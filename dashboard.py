@@ -7,6 +7,7 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import sys
 import os
@@ -17,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from orchestration import AlphaGroupChat
 from portfolio import PortfolioBuilder
 from portfolio.backtest import BacktestEngine
-from tools import get_sentiment_for_tickers
+from tools import get_sentiment_for_tickers, get_indicator_data
 
 st.set_page_config(page_title="AlphaAgents Terminal", page_icon="🤖", layout="wide")
 
@@ -54,19 +55,50 @@ with tab1:
                 st.success(results.get("valuation_analysis", "No data"))
 
 with tab2:
-    st.header("Technical Candlestick Charts")
+    st.header("Advanced Technical Analysis")
     chart_ticker = st.selectbox("Ticker for Charting", tickers, key="chart_ticker")
-    period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"])
+    period = st.selectbox("Period", ["3mo", "6mo", "1y", "2y", "5y"])
     
-    if st.button("Draw Chart"):
-        df = yf.download(chart_ticker, period=period)
-        fig = go.Figure(data=[go.Candlestick(x=df.index,
-                        open=df['Open'],
-                        high=df['High'],
-                        low=df['Low'],
-                        close=df['Close'])])
-        fig.update_layout(title=f"{chart_ticker} Price Action", xaxis_rangeslider_visible=False)
-        st.plotly_chart(fig, use_container_width=True)
+    if st.button("Generate Professional Chart"):
+        with st.spinner("Processing technical indicators..."):
+            df = yf.download(chart_ticker, period=period)
+            df = get_indicator_data(df)
+            
+            # Create subplots: Price, MACD, RSI
+            fig = make_subplots(rows=3, cols=1, shared_xaxes=True, 
+                               vertical_spacing=0.05, 
+                               row_heights=[0.6, 0.2, 0.2],
+                               subplot_titles=("Price & Overlays", "MACD", "RSI"))
+            
+            # Candlestick
+            fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], 
+                                        low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
+            
+            # SMAs
+            if "SMA_50" in df.columns:
+                fig.add_trace(go.Scatter(x=df.index, y=df['SMA_50'], name="SMA 50", line=dict(color='orange', width=1)), row=1, col=1)
+            if "SMA_200" in df.columns:
+                fig.add_trace(go.Scatter(x=df.index, y=df['SMA_200'], name="SMA 200", line=dict(color='red', width=1)), row=1, col=1)
+            
+            # Bollinger Bands
+            if "BBU_20_2.0" in df.columns:
+                fig.add_trace(go.Scatter(x=df.index, y=df['BBU_20_2.0'], name="BB Upper", line=dict(dash='dash', color='gray', width=1)), row=1, col=1)
+                fig.add_trace(go.Scatter(x=df.index, y=df['BBL_20_2.0'], name="BB Lower", line=dict(dash='dash', color='gray', width=1), fill='tonexty'), row=1, col=1)
+            
+            # MACD
+            if "MACD_12_26_9" in df.columns:
+                fig.add_trace(go.Scatter(x=df.index, y=df['MACD_12_26_9'], name="MACD", line=dict(color='blue')), row=2, col=1)
+                fig.add_trace(go.Scatter(x=df.index, y=df['MACDs_12_26_9'], name="Signal", line=dict(color='orange')), row=2, col=1)
+                fig.add_trace(go.Bar(x=df.index, y=df['MACDh_12_26_9'], name="Histogram"), row=2, col=1)
+            
+            # RSI
+            if "RSI" in df.columns:
+                fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI", line=dict(color='purple')), row=3, col=1)
+                fig.add_trace(go.Scatter(x=df.index, y=[70]*len(df), showlegend=False, line=dict(dash='dot', color='red')), row=3, col=1)
+                fig.add_trace(go.Scatter(x=df.index, y=[30]*len(df), showlegend=False, line=dict(dash='dot', color='green')), row=3, col=1)
+            
+            fig.update_layout(height=800, xaxis_rangeslider_visible=False, template="plotly_dark")
+            st.plotly_chart(fig, use_container_width=True)
 
 with tab3:
     st.header("Portfolio Construction")

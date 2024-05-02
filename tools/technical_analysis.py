@@ -50,6 +50,51 @@ def get_technical_indicators(ticker: str, period: str = "1y") -> Dict[str, Any]:
     return result
 
 
+def get_indicator_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate indicators for the entire DataFrame for plotting.
+    
+    Args:
+        df: Historical price DataFrame
+        
+    Returns:
+        DataFrame with indicators appended
+    """
+    df_with_ind = df.copy()
+    
+    if HAS_PANDAS_TA:
+        # RSI
+        df_with_ind["RSI"] = ta.rsi(df["Close"], length=14)
+        
+        # MACD
+        macd = ta.macd(df["Close"])
+        if macd is not None:
+            df_with_ind = pd.concat([df_with_ind, macd], axis=1)
+            
+        # Bollinger Bands
+        bbands = ta.bbands(df["Close"], length=20)
+        if bbands is not None:
+            df_with_ind = pd.concat([df_with_ind, bbands], axis=1)
+            
+        # Moving Averages
+        df_with_ind["SMA_20"] = ta.sma(df["Close"], length=20)
+        df_with_ind["SMA_50"] = ta.sma(df["Close"], length=50)
+        df_with_ind["SMA_200"] = ta.sma(df["Close"], length=200)
+    else:
+        # Manual Fallback
+        delta = df["Close"].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        df_with_ind["RSI"] = 100 - (100 / (1 + rs))
+        
+        df_with_ind["SMA_20"] = df["Close"].rolling(20).mean()
+        df_with_ind["SMA_50"] = df["Close"].rolling(50).mean()
+        df_with_ind["SMA_200"] = df["Close"].rolling(200).mean()
+        
+    return df_with_ind
+
+
 def _calculate_with_pandas_ta(df: pd.DataFrame) -> Dict[str, Any]:
     """Calculate indicators using pandas_ta."""
     indicators = {}
