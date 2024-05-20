@@ -20,31 +20,80 @@ AlphaAgents is a production-ready multi-agent investment framework that leverage
 
 ## Architecture
 
+### System Overview
+
+AlphaAgents utilizes a layered architecture to separate concerns between user interaction, agent orchestration, specialized reasoning, and data acquisition.
+
+```mermaid
+graph TD
+    User([User/Terminal]) --> Dashboard[Interactive Dashboard]
+    Dashboard --> Orchestrator[AlphaGroupChat Manager]
+    Orchestrator --> Debate[Debate Manager]
+
+    subgraph Agents [Specialized AI Agents]
+        Fundamental[Fundamental Agent]
+        Sentiment[Sentiment Agent]
+        Valuation[Valuation Agent]
+    end
+
+    Orchestrator <--> Agents
+    Debate <--> Agents
+
+    subgraph Tools [Data & Analysis Tools]
+        YF[yfinance API]
+        NAPI[NewsAPI]
+        TA[Technical Analysis Lib]
+        Cache[(Disk Cache)]
+    end
+
+    Agents --> Tools
+    Tools --> Cache
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    AlphaAgents Framework                     │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │ Fundamental │  │  Sentiment  │  │  Valuation  │          │
-│  │    Agent    │  │    Agent    │  │    Agent    │          │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘          │
-│         │                │                │                  │
-│         └────────────────┼────────────────┘                  │
-│                          ▼                                   │
-│              ┌───────────────────────┐                       │
-│              │   Group Chat Manager  │                       │
-│              │   (Orchestration)     │                       │
-│              └───────────┬───────────┘                       │
-│                          ▼                                   │
-│              ┌───────────────────────┐                       │
-│              │   Debate Mechanism    │                       │
-│              │   (Consensus)         │                       │
-│              └───────────┬───────────┘                       │
-│                          ▼                                   │
-│              ┌───────────────────────┐                       │
-│              │ Portfolio Recommendations │                   │
-│              └───────────────────────┘                       │
-└─────────────────────────────────────────────────────────────┘
+
+### Agent Collaboration Workflow
+
+The system follows a structured collaborative process to reach an investment decision.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant O as Orchestrator
+    participant A as Agents (F, S, V)
+    participant D as Debate Manager
+    participant P as Portfolio Builder
+
+    U->>O: Request Analysis (Ticker)
+    O->>A: Parallel Analysis Request
+    A-->>O: Individual Reports & Recommendations
+    O->>D: Check for Conflicts
+    alt Conflict Detected
+        D->>A: Initiate Debate Rounds
+        A-->>D: Revised Positions
+        D->>D: Reach Consensus / Weighted Vote
+    else No Conflict
+        D->>D: Standard Aggregation
+    end
+    D->>>P: Final Integrated Sentiment
+    P-->>U: Portfolio Recommendation & Rationale
+```
+
+### Debate Mechanism Logic
+
+When agents disagree (e.g., Fundamental says "Buy" but Valuation says "Sell"), the Debate Manager intervenes.
+
+```mermaid
+flowchart LR
+    Start[Agent Outputs] --> Conflict{Recommendation Conflict?}
+    Conflict -- No --> Aggregate[Weighted Averaging]
+    Conflict -- Yes --> Round1[Debate Round 1: Exchanging Rationales]
+    Round1 --> Review{Consensus Reached?}
+    Review -- Yes --> Final[Final Decision]
+    Review -- No --> Round2[Debate Round 2: Rebuttal & Consensus Search]
+    Round2 --> Max{Max Rounds Hit?}
+    Max -- Yes --> Vote[Weighted Vote by Confidence]
+    Max -- No --> Review
+    Vote --> Final
+    Aggregate --> Final
 ```
 
 ## Agents
