@@ -73,7 +73,7 @@ sequenceDiagram
     else No Conflict
         D->>D: Standard Aggregation
     end
-    D->>>P: Final Integrated Sentiment
+    D->>P: Final Integrated Sentiment
     P-->>U: Portfolio Recommendation & Rationale
 ```
 
