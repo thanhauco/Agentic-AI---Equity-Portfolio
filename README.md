@@ -43,11 +43,13 @@ graph TD
         YF[yfinance API]
         NAPI[NewsAPI]
         TA[Technical Analysis Lib]
+        ML[MLEngine - LSTM/RNN]
         Cache[(Disk Cache)]
     end
 
     Agents --> Tools
     Tools --> Cache
+    Valuation --> ML
 ```
 
 ### Agent Collaboration Workflow

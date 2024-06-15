@@ -32,7 +32,7 @@ tickers_input = st.sidebar.text_input("Tickers (comma-separated)", "AAPL,MSFT,NV
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 # Main UI
-tab1, tab2, tab3, tab4 = st.tabs(["Stock Analysis", "Technical Charts", "Portfolio View", "Market Sentiment"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Stock Analysis", "Technical Charts", "Neural Analytics", "Portfolio View", "Market Sentiment"])
 
 with tab1:
     st.header("Collaborative Stock Analysis")
@@ -101,6 +101,41 @@ with tab2:
             st.plotly_chart(fig, use_container_width=True)
 
 with tab3:
+    st.header("🧠 Neural Analytics & ML Predictions")
+    ml_ticker = st.selectbox("Ticker for ML Prediction", tickers, key="ml_ticker")
+    
+    if st.button("Run Neural Analysis"):
+        from tools import MLEngine
+        engine = MLEngine()
+        
+        with st.spinner("Training LSTM Network & Analyzing Patterns..."):
+            df = yf.download(ml_ticker, period="2y")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Price Prediction (LSTM RNN)")
+                pred_results = engine.predict_price_lstm(df)
+                if "error" not in pred_results:
+                    st.success(f"Forecasted trend for next 5 days: {pred_results['forecast']}")
+                    st.metric("Model Confidence", f"{pred_results['confidence_score']*100}%")
+                else:
+                    st.error(pred_results["error"])
+            
+            with col2:
+                st.subheader("Anomaly Detection (Isolation Forest)")
+                anomaly_results = engine.detect_anomalies(df)
+                if "error" not in anomaly_results:
+                    st.write(f"Detected {anomaly_results['anomaly_count']} outliers in historical data.")
+                    st.warning(f"Recent anomalies: {anomaly_results['recent_anomalies']}")
+                else:
+                    st.error(anomaly_results["error"])
+            
+            st.subheader("Feature Driven Importance (Random Forest)")
+            importance = engine.analyze_feature_importance(df)
+            st.bar_chart(pd.Series(importance))
+
+with tab4:
     st.header("Portfolio Construction")
     if st.button("Generate Recommendations"):
         st.write("Synthesizing multi-agent views into optimized weights...")
@@ -110,7 +145,7 @@ with tab3:
         ]
         st.table(recs)
 
-with tab4:
+with tab5:
     st.header("Global Market Sentiment Heatmap")
     if st.button("Refresh Sentiment Map"):
         with st.spinner("Calculating sentiment for universe..."):
@@ -133,10 +168,10 @@ with tab4:
     end_date = st.date_input("End Date", datetime.now())
     
     if st.button("Run Simulation"):
-        engine = BacktestEngine()
+        engine_bt = BacktestEngine()
         # Use simple equal weights for demo
         mock_recs = [{"ticker": t, "weight": 100/len(tickers)} for t in tickers]
-        results = engine.run(mock_recs, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
+        results = engine_bt.run(mock_recs, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
         
         st.metric("Total Return", f"{results['total_return_pct']:.2f}%")
         st.line_chart(results["history"])

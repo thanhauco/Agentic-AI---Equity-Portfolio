@@ -21,7 +21,7 @@ pydantic>=2.0.0
 pytest>=7.0.0
 pytest-asyncio>=0.21.0
 
-# Visualization
-streamlit>=1.24.0
-plotly>=5.15.0
-scipy>=1.10.0
+# Machine Learning & Neural Networks
+scikit-learn>=1.2.0
+tensorflow>=2.12.0
+statsmodels>=0.14.0

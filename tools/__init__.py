@@ -6,6 +6,8 @@ from .financial_data import (
     get_historical_prices,
     get_key_metrics,
 )
+from .cache import disk_cache
+from .ml_engine import MLEngine
 from .news_api import (
     get_stock_news,
     get_analyst_ratings,
@@ -29,5 +31,7 @@ __all__ = [
     "get_technical_indicators",
     "get_volume_analysis",
     "get_support_resistance",
+    "get_indicator_data",
+    "MLEngine",
 ]
 
