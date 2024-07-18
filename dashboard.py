@@ -104,36 +104,83 @@ with tab3:
     st.header("🧠 Neural Analytics & ML Predictions")
     ml_ticker = st.selectbox("Ticker for ML Prediction", tickers, key="ml_ticker")
     
+    st.subheader("Model Selection")
+    model_choice = st.radio("Select Model", ["LSTM RNN", "Transformer", "GRU", "Ensemble"], horizontal=True)
+    
     if st.button("Run Neural Analysis"):
-        from tools import MLEngine
-        engine = MLEngine()
+        from tools import MLEngine, TransformerPredictor, GRUPredictor, FinancialSentimentClassifier, get_stock_news
         
-        with st.spinner("Training LSTM Network & Analyzing Patterns..."):
+        with st.spinner("Training Neural Networks & Analyzing Patterns..."):
             df = yf.download(ml_ticker, period="2y")
             
             col1, col2 = st.columns(2)
             
             with col1:
-                st.subheader("Price Prediction (LSTM RNN)")
-                pred_results = engine.predict_price_lstm(df)
+                st.subheader(f"Price Prediction ({model_choice})")
+                
+                if model_choice == "LSTM RNN":
+                    engine = MLEngine()
+                    pred_results = engine.predict_price_lstm(df)
+                elif model_choice == "Transformer":
+                    engine = TransformerPredictor()
+                    pred_results = engine.train_and_predict(df)
+                elif model_choice == "GRU":
+                    engine = GRUPredictor()
+                    pred_results = engine.train_and_predict(df)
+                else:  # Ensemble
+                    lstm_engine = MLEngine()
+                    transformer = TransformerPredictor()
+                    lstm_pred = lstm_engine.predict_price_lstm(df)
+                    trans_pred = transformer.train_and_predict(df)
+                    
+                    if "error" not in lstm_pred and "error" not in trans_pred:
+                        # Average ensemble
+                        avg_forecast = [(l + t) / 2 for l, t in zip(lstm_pred['forecast'], trans_pred['forecast'])]
+                        pred_results = {"forecast": avg_forecast, "model_type": "Ensemble (LSTM + Transformer)"}
+                    else:
+                        pred_results = lstm_pred if "error" not in lstm_pred else trans_pred
+                
                 if "error" not in pred_results:
-                    st.success(f"Forecasted trend for next 5 days: {pred_results['forecast']}")
-                    st.metric("Model Confidence", f"{pred_results['confidence_score']*100}%")
+                    st.success(f"5-Day Forecast: {[round(p, 2) for p in pred_results['forecast']]}")
+                    st.info(f"Model: {pred_results.get('model_type', model_choice)}")
+                    if "architecture" in pred_results:
+                        st.json(pred_results["architecture"])
                 else:
                     st.error(pred_results["error"])
             
             with col2:
+                st.subheader("FinBERT Sentiment Analysis")
+                classifier = FinancialSentimentClassifier()
+                news = get_stock_news(ml_ticker, days=3)
+                
+                if news and "error" not in news[0]:
+                    headlines = [n.get("title", "") for n in news[:10]]
+                    agg_result = classifier.aggregate_sentiment(headlines)
+                    
+                    sentiment_color = "green" if agg_result["aggregate_sentiment"] == "bullish" else "red" if agg_result["aggregate_sentiment"] == "bearish" else "gray"
+                    st.metric("News Sentiment", agg_result["aggregate_sentiment"].upper(), delta=f"{agg_result['score']:.2f}")
+                    st.progress(agg_result["score"])
+                    st.caption(f"Model: {agg_result['model']} | Sample: {agg_result['sample_size']} headlines")
+                else:
+                    st.warning("No news available for sentiment analysis")
+            
+            st.markdown("---")
+            col3, col4 = st.columns(2)
+            
+            with col3:
                 st.subheader("Anomaly Detection (Isolation Forest)")
-                anomaly_results = engine.detect_anomalies(df)
+                engine_ml = MLEngine()
+                anomaly_results = engine_ml.detect_anomalies(df)
                 if "error" not in anomaly_results:
-                    st.write(f"Detected {anomaly_results['anomaly_count']} outliers in historical data.")
+                    st.write(f"Detected **{anomaly_results['anomaly_count']}** outliers")
                     st.warning(f"Recent anomalies: {anomaly_results['recent_anomalies']}")
                 else:
                     st.error(anomaly_results["error"])
             
-            st.subheader("Feature Driven Importance (Random Forest)")
-            importance = engine.analyze_feature_importance(df)
-            st.bar_chart(pd.Series(importance))
+            with col4:
+                st.subheader("Feature Importance (Random Forest)")
+                importance = engine_ml.analyze_feature_importance(df)
+                st.bar_chart(pd.Series(importance))
 
 with tab4:
     st.header("Portfolio Construction")
