@@ -32,7 +32,10 @@ tickers_input = st.sidebar.text_input("Tickers (comma-separated)", "AAPL,MSFT,NV
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 # Main UI
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Stock Analysis", "Technical Charts", "Neural Analytics", "Portfolio View", "Market Sentiment"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "Stock Analysis", "Technical Charts", "Neural Analytics", 
+    "Quant & RL", "Portfolio View", "Market Sentiment"
+])
 
 with tab1:
     st.header("Collaborative Stock Analysis")
@@ -157,7 +160,6 @@ with tab3:
                     headlines = [n.get("title", "") for n in news[:10]]
                     agg_result = classifier.aggregate_sentiment(headlines)
                     
-                    sentiment_color = "green" if agg_result["aggregate_sentiment"] == "bullish" else "red" if agg_result["aggregate_sentiment"] == "bearish" else "gray"
                     st.metric("News Sentiment", agg_result["aggregate_sentiment"].upper(), delta=f"{agg_result['score']:.2f}")
                     st.progress(agg_result["score"])
                     st.caption(f"Model: {agg_result['model']} | Sample: {agg_result['sample_size']} headlines")
@@ -183,6 +185,51 @@ with tab3:
                 st.bar_chart(pd.Series(importance))
 
 with tab4:
+    st.header("🚀 Quant & Reinforcement Learning Terminal")
+    rl_ticker = st.selectbox("Select Ticker for Strategy Optimization", tickers, key="rl_ticker")
+    
+    colx, coly = st.columns(2)
+    
+    with colx:
+        st.subheader("Computer Vision Pattern Scanner")
+        if st.button("Deep Vision Chart Scan"):
+            from tools import ChartPatternScanner
+            scanner = ChartPatternScanner()
+            df_vision = yf.download(rl_ticker, period="3mo")
+            with st.spinner("Scanning pixels for geometric patterns..."):
+                pattern_res = scanner.detect_patterns(df_vision)
+                if "error" not in pattern_res:
+                    st.metric("Detected Pattern", pattern_res["detected_pattern"])
+                    st.write(f"Confidence: **{pattern_res['confidence']:.2%}**")
+                    st.info(f"Market Bias: **{pattern_res['sentiment'].upper()}**")
+                else:
+                    st.error(pattern_res["error"])
+                    
+    with coly:
+        st.subheader("Regime Shift & Structural Break")
+        if st.button("Run Stability Test"):
+            from tools import analyze_structural_break
+            df_break = yf.download(rl_ticker, period="1y")
+            break_res = analyze_structural_break(df_break)
+            st.metric("Structural Break", "DETECTED" if break_res["is_structural_break"] else "NOT DETECTED")
+            st.progress(break_res["confidence"])
+            st.caption("Using CUSUM OLS Residuals analysis")
+
+    st.markdown("---")
+    st.subheader("Deep Reinforcement Learning (DQN) Simulation")
+    if st.button("Train RL Trading Agent"):
+        from tools import run_rl_simulation
+        df_rl = yf.download(rl_ticker, period="2y")
+        with st.spinner("RL Agent is learning the market through trial and error..."):
+            rl_results = run_rl_simulation(df_rl, episodes=5) # Run fewer for demo speed
+            if "error" not in rl_results:
+                st.success(f"Simulation Finished! Total Cumulative Profit: **${rl_results['final_profit']:.2f}**")
+                st.line_chart(rl_results["history"])
+                st.caption(f"Strategy: {rl_results['strategy']} over {rl_results['total_episodes']} episodes")
+            else:
+                st.error(rl_results["error"])
+
+with tab5:
     st.header("Portfolio Construction")
     if st.button("Generate Recommendations"):
         st.write("Synthesizing multi-agent views into optimized weights...")
@@ -192,7 +239,7 @@ with tab4:
         ]
         st.table(recs)
 
-with tab5:
+with tab6:
     st.header("Global Market Sentiment Heatmap")
     if st.button("Refresh Sentiment Map"):
         with st.spinner("Calculating sentiment for universe..."):

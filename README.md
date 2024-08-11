@@ -12,11 +12,14 @@ AlphaAgents is a production-ready multi-agent investment framework that leverage
 
 ## Key Features
 
-- **🧠 Multi-Agent Collaboration**: Three specialized agents (Fundamental, Sentiment, Valuation) work together
-- **⚖️ Debate Mechanism**: Round-robin consensus building for conflicting recommendations
-- **📊 Risk Profiles**: Support for risk-averse and risk-neutral investment strategies
-- **🔧 Modular Architecture**: Easy to extend with additional agents and tools
-- **📈 Real Data Integration**: yfinance, SEC Edgar, NewsAPI integrations
+- **🧠 Multi-Agent Collaboration**: Specialized agents (Fundamental, Sentiment, Valuation) with Chain-of-Thought reasoning
+- **🤖 Deep Learning Suite**: LSTM, GRU, and Transformer architectures for price forecasting
+- **🎯 Reinforcement Learning**: DQN agent for autonomous trading strategy optimization
+- **👁️ Computer Vision**: 1D-CNN based chart pattern recognition (Cup & Handle, Head & Shoulders)
+- **⚖️ Debate Mechanism**: Round-robin consensus building with self-reflection loops
+- **📉 Regime Analysis**: Structural break detection via CUSUM and OLS residuals
+- **📊 Market Sentiment**: Real-time FinBERT analysis of global news flows
+- **🔧 Modular Architecture**: Multi-layered tech stack (FastAPI, Streamlit, AutoGen)
 
 ## Architecture
 

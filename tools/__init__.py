@@ -10,6 +10,8 @@ from .cache import disk_cache
 from .ml_engine import MLEngine
 from .transformer_model import TransformerPredictor, GRUPredictor
 from .sentiment_nn import FinancialSentimentClassifier, CNNTextClassifier
+from .rl_agent import DQNAgent, run_rl_simulation
+from .vision_patterns import ChartPatternScanner, analyze_structural_break
 from .news_api import (
     get_stock_news,
     get_analyst_ratings,
@@ -41,4 +43,8 @@ __all__ = [
     "GRUPredictor",
     "FinancialSentimentClassifier",
     "CNNTextClassifier",
+    "DQNAgent",
+    "run_rl_simulation",
+    "ChartPatternScanner",
+    "analyze_structural_break",
 ]
