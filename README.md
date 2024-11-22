@@ -130,6 +130,24 @@ Evaluates stock valuations via:
 - Volume analysis
 - Price momentum
 
+## Institutional-Grade Intelligence
+
+### 🛡️ Advanced Risk Lab
+
+The AlphaAgents dashboard includes a professional-grade "Risk Lab" terminal for multi-dimensional risk quantification:
+
+- **Hierarchical Risk Parity (HRP)**: Implemented a clustering-based allocation model (`portfolio/risk_models.py`) that organizes assets into a tree structure (dendrogram) to build more robust portfolios than traditional Mean-Variance Optimization.
+- **Monte Carlo Value-at-Risk (VaR)**: A simulation engine that runs 10,000+ scenarios to calculate the maximum expected loss at varying confidence levels (90%–99%).
+- **Expected Shortfall (CVaR)**: Quantifies "tail risk" by calculating the average loss in the absolute worst-case scenarios.
+- **LLM Stress Testing**: Integrated a `StressTester` (`portfolio/stress_testing.py`) that maps your portfolio against both historical crashes (2008 GFC, 2020 COVID) and LLM-generated predictive scenarios like stagflation or credit crunches.
+
+### 📄 Filing Intelligence (RAG Engine)
+
+The platform features a dedicated "Filing Intelligence" tab powered by Retrieval-Augmented Generation for deep document interrogation:
+
+- **Semantic Vector Storage**: Utilizes `faiss` and `sentence-transformers` (`tools/rag_engine.py`) to index complex SEC document chunks.
+- **Contextual Q&A**: Users can ask natural language questions directly about 10-K and 10-Q filings. The system retrieves the most relevant passages and synthesizes an answer, grounding the GenAI agents in "hard" regulatory facts.
+
 ## Quick Start
 
 ```bash
