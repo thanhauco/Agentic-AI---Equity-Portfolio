@@ -18,7 +18,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from orchestration import AlphaGroupChat
 from portfolio import PortfolioBuilder
 from portfolio.backtest import BacktestEngine
-from tools import get_sentiment_for_tickers, get_indicator_data
+from portfolio.risk_models import RiskManager
+from portfolio.stress_testing import StressTester
+from tools import get_sentiment_for_tickers, get_indicator_data, RAGEngine
 
 st.set_page_config(page_title="AlphaAgents Terminal", page_icon="🤖", layout="wide")
 
@@ -32,9 +34,10 @@ tickers_input = st.sidebar.text_input("Tickers (comma-separated)", "AAPL,MSFT,NV
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 # Main UI
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "Stock Analysis", "Technical Charts", "Neural Analytics", 
-    "Quant & RL", "Portfolio View", "Market Sentiment"
+    "Quant & RL", "Risk Lab", "Filing Intelligence",
+    "Portfolio View", "Market Sentiment"
 ])
 
 with tab1:
@@ -230,6 +233,81 @@ with tab4:
                 st.error(rl_results["error"])
 
 with tab5:
+    st.header("⚖️ Risk Lab: Portfolio Risk Management")
+    st.subheader("Hierarchical Risk Parity (HRP)")
+    if st.button("Calculate Optimal Risk Weights"):
+        with st.spinner("Analyzing asset correlations and clustering..."):
+            # Fetch historical returns for all tickers
+            returns_data = {}
+            for t in tickers:
+                df_t = yf.download(t, period="1y")
+                returns_data[t] = df_t['Close'].pct_change().dropna()
+            
+            returns_df = pd.DataFrame(returns_data)
+            hrp_weights = RiskManager.get_hrp_weights(returns_df)
+            
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.write("HRP Allocation Weights:")
+                st.table(hrp_weights)
+            with col_b:
+                st.bar_chart(hrp_weights)
+
+    st.markdown("---")
+    st.subheader("Monte Carlo Value-at-Risk (VaR)")
+    var_ticker = st.selectbox("Ticker for VaR analysis", tickers, key="var_ticker")
+    conf_level = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+    
+    if st.button("Run Simulation"):
+        df_var = yf.download(var_ticker, period="1y")
+        returns_var = df_var['Close'].pct_change().dropna()
+        
+        var_mc = RiskManager.calculate_var(returns_var, confidence=conf_level, method='monte_carlo')
+        cvar = RiskManager.calculate_cvar(returns_var, confidence=conf_level)
+        
+        col_c, col_d = st.columns(2)
+        with col_c:
+            st.metric(f"VaR ({conf_level*100:.0f}%)", f"{var_mc*100:.2f}%")
+            st.caption("Maximum expected loss over 1 day")
+        with col_d:
+            st.metric("Expected Shortfall (CVaR)", f"{cvar*100:.2f}%")
+            st.caption("Average loss in worst-case scenarios")
+
+    st.markdown("---")
+    st.subheader("GenAI Stress Testing")
+    portfolio_val = st.number_input("Portfolio Value ($)", value=100000)
+    if st.button("Run Stress Scenarios"):
+        tester = StressTester()
+        stress_results = tester.run_stress_test(portfolio_val)
+        st.table(stress_results)
+
+with tab6:
+    st.header("📄 Filing Intelligence (RAG Engine)")
+    rag_ticker = st.selectbox("Select Company for Filing Analysis", tickers, key="rag_ticker")
+    user_query = st.text_input("Ask about 10-K/10-Q (e.g., 'What are the main risk factors?')")
+    
+    if st.button("Query Filing"):
+        with st.spinner("Retrieving relevant context from SEC filings..."):
+            # Mock filing data for RAG demo
+            mock_filing = [
+                f"{rag_ticker} faces significant competition in the global technology market.",
+                "Regulatory risks include potential antitrust investigations in Europe.",
+                "Supply chain disruptions could impact production capacity in FY2024.",
+                "Investment in AI research is a core strategic priority for the next decade.",
+                "Dividend payouts are subject to board approval and free cash flow availability."
+            ]
+            rag = RAGEngine()
+            rag.add_documents(mock_filing)
+            
+            results = rag.query(user_query)
+            st.subheader("Retrieved Context Chunks")
+            for i, r in enumerate(results):
+                st.info(f"Chunk {i+1}: {r['text']}")
+            
+            st.subheader("AI Analysis (Simulated)")
+            st.success("Based on the provided context, the company highlights regulatory scrutiny and supply chain resilience as key focal points.")
+
+with tab7:
     st.header("Portfolio Construction")
     if st.button("Generate Recommendations"):
         st.write("Synthesizing multi-agent views into optimized weights...")
@@ -239,7 +317,7 @@ with tab5:
         ]
         st.table(recs)
 
-with tab6:
+with tab8:
     st.header("Global Market Sentiment Heatmap")
     if st.button("Refresh Sentiment Map"):
         with st.spinner("Calculating sentiment for universe..."):
