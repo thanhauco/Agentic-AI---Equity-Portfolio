@@ -13,6 +13,8 @@ from .sentiment_nn import FinancialSentimentClassifier, CNNTextClassifier
 from .rl_agent import DQNAgent, run_rl_simulation
 from .vision_patterns import ChartPatternScanner, analyze_structural_break
 from .rag_engine import RAGEngine
+from .signals import AlphaSignalGenerator
+from .alt_data import AltDataEngine
 from .news_api import (
     get_stock_news,
     get_analyst_ratings,
@@ -49,4 +51,6 @@ __all__ = [
     "ChartPatternScanner",
     "analyze_structural_break",
     "RAGEngine",
+    "AlphaSignalGenerator",
+    "AltDataEngine",
 ]
