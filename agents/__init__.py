@@ -4,6 +4,7 @@ from .base_agent import BaseAlphaAgent
 from .fundamental_agent import FundamentalAgent
 from .sentiment_agent import SentimentAgent
 from .valuation_agent import ValuationAgent
+from .macro_agent import MacroAgent
 from .reasoning_chain import ChainOfThoughtReasoner, ThoughtChain, SelfReflectionLoop
 
 __all__ = [
@@ -11,6 +12,7 @@ __all__ = [
     "FundamentalAgent",
     "SentimentAgent",
     "ValuationAgent",
+    "MacroAgent",
     "ChainOfThoughtReasoner",
     "ThoughtChain",
     "SelfReflectionLoop",
