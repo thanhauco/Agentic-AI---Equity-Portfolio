@@ -1,26 +1,34 @@
-# Use an official Python runtime as a parent image
+# Production Dockerfile for AlphaAgents
 FROM python:3.9-slim
 
-# Set the working directory in the container
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies for TA-Lib and other ML libs
+RUN apt-get update && apt-get install -y \
     build-essential \
+    curl \
+    software-properties-common \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+# Set working directory
+WORKDIR /app
 
-# Install any needed packages specified in requirements.txt
+# Copy requirements and install
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
+# Copy project files
 COPY . .
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV DEFAULT_RISK_PROFILE=neutral
+# Create directories for logs and data
+RUN mkdir -p .logs/governance .data
 
-# Default command
-CMD ["python", "examples/single_stock_analysis.py", "--ticker", "AAPL"]
+# Expose ports for Dashboard (8501) and API (8000)
+EXPOSE 8501 8000
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV STREAMLIT_SERVER_PORT=8501
+ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
+
+# Default to running the API gateway
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
