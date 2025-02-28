@@ -15,6 +15,11 @@ from .vision_patterns import ChartPatternScanner, analyze_structural_break
 from .rag_engine import RAGEngine
 from .signals import AlphaSignalGenerator
 from .alt_data import AltDataEngine
+from .options_engine import BlackScholesEngine
+from .factor_model import FactorModelEngine
+from .pairs_trading import PairsTrader
+from .volatility_surface import VolatilitySurface
+from .microstructure import MarketMicrostructure
 from .news_api import (
     get_stock_news,
     get_analyst_ratings,
@@ -53,4 +58,9 @@ __all__ = [
     "RAGEngine",
     "AlphaSignalGenerator",
     "AltDataEngine",
+    "BlackScholesEngine",
+    "FactorModelEngine",
+    "PairsTrader",
+    "VolatilitySurface",
+    "MarketMicrostructure",
 ]

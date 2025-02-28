@@ -148,6 +148,55 @@ The platform features a dedicated "Filing Intelligence" tab powered by Retrieval
 - **Semantic Vector Storage**: Utilizes `faiss` and `sentence-transformers` (`tools/rag_engine.py`) to index complex SEC document chunks.
 - **Contextual Q&A**: Users can ask natural language questions directly about 10-K and 10-Q filings. The system retrieves the most relevant passages and synthesizes an answer, grounding the GenAI agents in "hard" regulatory facts.
 
+### 📡 Alpha Signal Generation
+
+The platform synthesizes multi-modal signals into a unified conviction score:
+
+- **AlphaSignalGenerator** (`tools/signals.py`): Combines fundamental, sentiment, technical, and neural model outputs into a single -1 to +1 Alpha Score.
+- **Verdict Engine**: Outputs **BULLISH**, **BEARISH**, or **NEUTRAL** classifications with confidence levels.
+
+### ⚙️ Advanced Portfolio Optimization
+
+Enterprise-grade mathematical optimization beyond standard mean-variance:
+
+- **Black-Litterman Model** (`portfolio/optimizers.py`): Integrates agent views (from LLM analysis) with market equilibrium to produce superior allocation weights.
+- **Kelly Criterion**: Calculates optimal bet sizing based on win probability and expected payoffs.
+
+### 🌍 Macro Strategist Agent
+
+A specialized agent for global economic analysis:
+
+- **MacroAgent** (`agents/macro_agent.py`): Analyzes Fed policy, inflation regimes, yield curve dynamics, and geopolitical risks.
+- **Sector Impact Analysis**: Evaluates how macro factors affect Technology, Energy, and Financial sectors.
+
+### 📊 ESG & Alternative Data
+
+Non-traditional signals for alpha generation:
+
+- **AltDataEngine** (`tools/alt_data.py`): Provides ESG composite scores (Environmental, Social, Governance) and social media buzz metrics.
+- **Carbon Intensity Tracking**: Monitors company-level emissions for sustainability-focused portfolios.
+
+### 🤖 Production API Gateway
+
+RESTful interface for programmatic access:
+
+- **FastAPI Bridge** (`api.py`): Exposes `/analyze` and `/results/{job_id}` endpoints for async multi-agent analysis.
+- **Background Task Processing**: Handles long-running LLM orchestration without blocking.
+
+### 🧠 Autonomous Memory & Learning
+
+Long-term persistence for continuous improvement:
+
+- **PersistentMemory** (`orchestration/memory_engine.py`): SQLite-backed storage of agent decisions and outcomes.
+- **Self-Improvement Loop**: Framework for DSPy-based prompt optimization based on historical accuracy.
+
+### 🔍 Governance & Observability
+
+Audit and monitoring infrastructure:
+
+- **GovernanceMonitor** (`orchestration/monitor.py`): Tracks token usage, latency, and strategy drift across agent operations.
+- **Drift Detection**: Alerts when agent recommendations flip significantly on the same ticker.
+
 ## Quick Start
 
 ```bash
