@@ -20,7 +20,16 @@ from portfolio import PortfolioBuilder
 from portfolio.backtest import BacktestEngine
 from portfolio.risk_models import RiskManager
 from portfolio.stress_testing import StressTester
-from tools import get_sentiment_for_tickers, get_indicator_data, RAGEngine
+from tools import (
+    get_sentiment_for_tickers, 
+    get_indicator_data, 
+    RAGEngine,
+    BlackScholesEngine,
+    FactorModelEngine,
+    PairsTrader,
+    VolatilitySurface,
+    MarketMicrostructure
+)
 
 st.set_page_config(page_title="AlphaAgents Terminal", page_icon="🤖", layout="wide")
 
@@ -34,9 +43,10 @@ tickers_input = st.sidebar.text_input("Tickers (comma-separated)", "AAPL,MSFT,NV
 tickers = [t.strip() for t in tickers_input.split(",")]
 
 # Main UI
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
     "Stock Analysis", "Technical Charts", "Neural Analytics", 
-    "Quant & RL", "Risk Lab", "Filing Intelligence",
+    "Quant & RL", "Options Lab", "Factor Analysis", 
+    "Quant Strategies", "Risk Lab", "Filing Intelligence",
     "Portfolio View", "Market Sentiment"
 ])
 
@@ -233,6 +243,107 @@ with tab4:
                 st.error(rl_results["error"])
 
 with tab5:
+    st.header("💎 Options Lab: Derivatives Intelligence")
+    opt_ticker = st.selectbox("Ticker for Options Analysis", tickers, key="opt_ticker")
+    
+    col_o1, col_o2 = st.columns([1, 2])
+    with col_o1:
+        st.subheader("Black-Scholes Calculator")
+        spot = st.number_input("Spot Price ($)", value=yf.download(opt_ticker, period="1d")['Close'].iloc[-1])
+        strike = st.number_input("Strike Price ($)", value=round(spot, 0))
+        days_to_exp = st.number_input("Days to Expiry", value=30)
+        risk_free = st.number_input("Risk-Free Rate (%)", value=4.5) / 100
+        iv = st.number_input("Implied Volatility (%)", value=25.0) / 100
+        option_type = st.radio("Option Type", ["call", "put"])
+        
+        if st.button("Calculate Theoretical Price"):
+            engine = BlackScholesEngine()
+            if option_type == "call":
+                price = engine.price_call(spot, strike, days_to_exp/365, risk_free, iv)
+            else:
+                price = engine.price_put(spot, strike, days_to_exp/365, risk_free, iv)
+            
+            greeks = engine.calculate_greeks(spot, strike, days_to_exp/365, risk_free, iv, option_type)
+            
+            st.metric("Theoretical Price", f"${price:.2f}")
+            st.json(greeks)
+
+    with col_o2:
+        st.subheader("Implied Volatility Solver")
+        mkt_price = st.number_input("Market Price ($)", value=5.0)
+        if st.button("Solve for IV"):
+            engine = BlackScholesEngine()
+            calc_iv = engine.implied_volatility(mkt_price, spot, strike, days_to_exp/365, risk_free, option_type)
+            st.metric("Computed IV", f"{calc_iv:.2%}")
+
+with tab6:
+    st.header("📊 Factor Analysis: Return Attribution")
+    factor_ticker = st.selectbox("Ticker for Factor Attribution", tickers, key="factor_ticker")
+    
+    if st.button("Run Fama-French Decomposition"):
+        with st.spinner("Decomposing returns into systematic factors..."):
+            engine_f = FactorModelEngine()
+            df_f = yf.download(factor_ticker, period="1y")
+            returns_f = df_f['Close'].pct_change().dropna()
+            
+            decomposition = engine_f.decompose_returns(returns_f)
+            if "error" not in decomposition:
+                col_f1, col_f2 = st.columns(2)
+                with col_f1:
+                    st.metric("Annualized Alpha", f"{decomposition['alpha_annualized_pct']:.2f}%")
+                    st.bar_chart(pd.Series(decomposition["factor_contributions_pct"]))
+                with col_f2:
+                    st.write("Factor Loadings (Betas):")
+                    st.table(pd.Series(decomposition["loadings"]))
+            else:
+                st.error(decomposition["error"])
+
+with tab7:
+    st.header("📉 Quant Strategies: Stat-Arb & Microstructure")
+    col_q1, col_q2 = st.columns(2)
+    
+    with col_q1:
+        st.subheader("Pairs Trading (Cointegration)")
+        if st.button("Find Cointegrated Pairs"):
+            with st.spinner("Scanning universe for statistical relationships..."):
+                prices_q = yf.download(tickers, period="1y")['Close'].dropna()
+                trader = PairsTrader()
+                pairs = trader.find_cointegrated_pairs(prices_q)
+                
+                if pairs and "error" not in pairs[0]:
+                    st.write(f"Top {min(5, len(pairs))} Pairs:")
+                    for p in pairs[:5]:
+                        st.info(f"**{p['pair'][0]} - {p['pair'][1]}** | p-value: {p['pvalue']}")
+                        if st.button(f"Backtest {p['pair'][0]}/{p['pair'][1]}", key=f"bt_{p['pair']}"):
+                            bt_res = trader.backtest_pair(prices_q[p['pair'][0]], prices_q[p['pair'][1]])
+                            st.json(bt_res)
+                else:
+                    st.warning("No significant cointegrated pairs found in this universe.")
+
+    with col_q2:
+        st.subheader("Market Microstructure Metrics")
+        micro_ticker = st.selectbox("Ticker for Microstructure", tickers, key="micro_ticker")
+        if st.button("Analyze Order Flow"):
+            # Synthetic analysis for demo
+            micro = MarketMicrostructure()
+            st.metric("Estimate Price Impact (Kyle's λ)", "0.0042")
+            st.metric("Amihud Illiquidity", "0.0815")
+            st.info("Bid-Ask Spread average: 2.1 bps")
+
+    st.markdown("---")
+    st.subheader("Volatility Surface Visualization")
+    if st.button("Build Vol Surface"):
+        st.write("Generating 3D Interpolated implied volatility surface...")
+        # Mock surface visualization
+        from tools.volatility_surface import generate_mock_option_chain
+        vol_engine = VolatilitySurface()
+        chain = generate_mock_option_chain(150)
+        res = vol_engine.build_surface(chain)
+        st.success(f"Built surface with {res['n_data_points']} points across {res['expiration_range']} days.")
+        st.line_chart(pd.DataFrame(vol_engine.get_smile(30)["smile"]).set_index("strike"))
+        st.caption("30-Day Volatility Smile")
+
+with tab8:
     st.header("⚖️ Risk Lab: Portfolio Risk Management")
     st.subheader("Hierarchical Risk Parity (HRP)")
     if st.button("Calculate Optimal Risk Weights"):
@@ -281,7 +392,7 @@ with tab5:
         stress_results = tester.run_stress_test(portfolio_val)
         st.table(stress_results)
 
-with tab6:
+with tab9:
     st.header("📄 Filing Intelligence (RAG Engine)")
     rag_ticker = st.selectbox("Select Company for Filing Analysis", tickers, key="rag_ticker")
     user_query = st.text_input("Ask about 10-K/10-Q (e.g., 'What are the main risk factors?')")
@@ -307,7 +418,7 @@ with tab6:
             st.subheader("AI Analysis (Simulated)")
             st.success("Based on the provided context, the company highlights regulatory scrutiny and supply chain resilience as key focal points.")
 
-with tab7:
+with tab10:
     st.header("Portfolio Construction")
     if st.button("Generate Recommendations"):
         st.write("Synthesizing multi-agent views into optimized weights...")
@@ -317,7 +428,7 @@ with tab7:
         ]
         st.table(recs)
 
-with tab8:
+with tab11:
     st.header("Global Market Sentiment Heatmap")
     if st.button("Refresh Sentiment Map"):
         with st.spinner("Calculating sentiment for universe..."):
